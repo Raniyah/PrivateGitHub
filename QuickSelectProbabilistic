@@ -1,0 +1,114 @@
+package Testp2;
+
+import java.util.Arrays;
+
+public class QuickSelect_ProbabilisticV {
+	static double ProbabilitySettings = 0.25;
+	static QuickSelect_ProbabilisticV q = new QuickSelect_ProbabilisticV();
+
+	public int QuickSelectProbabilistic(int[] array, int left, int right, int k) {
+
+		int size = right - left + 1;
+		if (size <= 20) { // If the list contains only one element,
+			return simpleSort(array, left, right, k); // return that element
+		}
+		int Probability = (int) (size * ProbabilitySettings);
+		int pivotIndex = -1;
+		int numOfElementsLeft = -1;
+		int numOfElementsRight = -1;
+
+		do {
+			// select a pivotIndex between left and right
+			pivotIndex = q.randomPivot(left, right);
+			pivotIndex = q.partition(array, left, right, pivotIndex);
+
+			numOfElementsLeft = pivotIndex - left;
+			numOfElementsRight = right - pivotIndex;
+
+			if (k == pivotIndex) {
+				return array[k];
+			}
+
+		} while (!((numOfElementsLeft > Probability & numOfElementsRight >= Probability)
+				| (numOfElementsLeft >= Probability & numOfElementsRight > Probability)));
+
+		if (k == pivotIndex) {
+			return array[k];
+		} else if (k < pivotIndex) {
+
+			right = pivotIndex - 1;
+			return array[QuickSelectProbabilistic(array, left, right, k)];
+		} else {
+			left = pivotIndex + 1;
+			return array[QuickSelectProbabilistic(array, left, right, k)];
+
+		}
+
+	}
+
+	public int partition(int[] array, int left, int right, int pivot) {
+		int pivotValue = array[pivot];
+		q.swap(array, pivot, right); // move pivot to end
+		int Index = left; // store index
+		for (int i = left; i < right; i++) {
+			if (array[i] < pivotValue) {
+				q.swap(array, Index, i);
+				Index++;
+			}
+		}
+		q.swap(array, right, Index); // Move pivot to its final place
+		return Index; // correct place of the pivot
+	}
+
+	public void swap(int[] array, int a, int b) {
+		int tmp = array[a];
+		array[a] = array[b];
+		array[b] = tmp;
+	}
+
+	public int randomPivot(int left, int right) {
+		return left + (int) Math.floor(Math.random() * (right - left + 1));
+	}
+
+	// this method to fill lest with Random Elements
+	public int[] uniqRandElements(int size) {
+		int[] arr = new int[size];
+
+		for (int i = 0; i < size; i++) {
+			arr[i] = (int) (Math.random() * size);
+
+			for (int j = 0; j < i; j++) {
+				if (arr[i] == arr[j]) {
+					arr[j] = (int) (Math.random() * size);
+				}
+			}
+		}
+		return arr;
+	}
+
+// this method is to sort list that have <= 20 elements 
+	public static int simpleSort(int[] a, int left, int right, int k) {
+
+		Arrays.sort(a, left, right);
+
+		return a[k];
+	}
+
+	public static void main(String[] args) {
+		int[] n = { 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000 };
+		// int[] n = { 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000 };
+		int k = 50;
+		for (int i = 0; i < n.length; i++) {
+			int[] array = q.uniqRandElements(n[i]); // fill array
+			long startTime = System.nanoTime();
+			int Kth = q.QuickSelectProbabilistic(array, 0, array.length - 1, k);
+			// ending time
+			long stopTime = System.nanoTime();
+			System.out.println("the 5th smallest element= " + Kth);
+			System.out.print("n size= " + n[i]);
+			System.out.print("  Time= ");
+			System.out.println(stopTime - startTime);
+
+		}
+	}
+}
