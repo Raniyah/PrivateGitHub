@@ -1,0 +1,129 @@
+package Raniyah;
+
+import java.util.Arrays;
+import java.util.stream.IntStream;
+
+public class test2 {
+	// Declaring int array "array"
+	static int[] numOfClients = { 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000 };
+	// Declaring int variable "mintraffic" to capture the minimum traffic
+	static int minimum_traffic;
+	static int k_server = 30;
+	static test2 test = new test2();
+
+	public static void main(String[] args) {
+
+		for (int i = 0; i < numOfClients.length; i++) {
+			int[] array = test.RandElements(numOfClients[i]); // fill array
+			System.out.println("Clients number= " + numOfClients[i] + " Number of server= " + k_server);
+			test.fast_response_KServer(array, k_server);
+		}
+	}
+
+	public void fast_response_KServer(int[] array, int k) {
+		if (k_server == 1) {
+			test.oneServer(array);
+
+		} else {
+			test.KServer(array, k);
+		}
+
+	}
+
+	public long oneServer(int[] array) {
+		long startTime = System.nanoTime();
+		int minDiff = Integer.MAX_VALUE;
+		// IntStream.of(Arrays.copyOfRange(array, 1, array.length)).sum();
+		;
+		int position = 0;
+		for (int i = 1; i < array.length; i++) {
+			int[] arr1 = Arrays.copyOfRange(array, 0, i);
+			int sum1 = IntStream.of(arr1).sum();
+			int[] arr2 = Arrays.copyOfRange(array, i + 1, array.length);
+			int sum2 = IntStream.of(arr2).sum();
+			int newDiff = Math.abs(sum1 - sum2);
+			if (newDiff < minDiff) {
+				minDiff = newDiff;
+				position = i;
+			}
+
+		}
+		long stopTime = System.nanoTime();
+		long executionTime = stopTime - startTime;
+		System.out.print("Execution time= ");
+		System.out.println(executionTime);
+		// System.out.println(position);
+		return executionTime;
+	}
+
+	public long KServer(int[] array, int k) {
+
+		int n = array.length;
+		long startTime = System.nanoTime();
+
+		int[][][] Server_clients_Traff = test.calculate_clientServer(array, k);
+		// minimizes the total amount of traffic carried by the network.
+		for (int i = 1; i < n; i++) {
+			for (int j = 2; j <= k && j <= i + 1; j++) {
+				Server_clients_Traff[0][i][j] = Integer.MAX_VALUE;
+				for (int p = j - 2; p < i; p++) {
+					Server_clients_Traff[0][i][j] = Math.min(Server_clients_Traff[0][i][j],
+							Server_clients_Traff[0][p][j - 1] + Server_clients_Traff[p + 1][i][1]);
+
+				}
+			}
+		}
+
+		minimum_traffic = Server_clients_Traff[0][n - 1][k];
+		long stopTime = System.nanoTime();
+		long executionTime = stopTime - startTime;
+		System.out.print("Execution time= ");
+		System.out.println(executionTime);
+		return executionTime;
+	}
+
+	public int[][][] calculate_clientServer(int[] array, int k) {
+		// Initialization
+		int n = array.length;
+		// 3D array to calculate and store the intermediate results
+		int[][][] Serv_cli_Traff = new int[n][n][k + 1];
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				int TotalCostOfClients = 0;
+				double half;
+				for (int p = j; p >= i; p--) {
+					// this loop is to go back from j to i and calculate traffic
+					TotalCostOfClients += array[p];
+				}
+				half = TotalCostOfClients / 2.0;
+				double currentCost = array[j];
+				int position = j;
+
+				while (currentCost <= half) { // ............ to fill cur with half of the sum from j to i
+					position--; // ....to capture the position to put an server
+
+					currentCost += array[position];
+				}
+				Serv_cli_Traff[i][j][1] = 0;
+				for (int x = i; x <= j; x++) {
+					// Total traffic is given by sum of each client’s individual traffic,
+					// multiplied by the distance (the number of hops) from the server.
+					Serv_cli_Traff[i][j][1] += array[x] * Math.abs(x - position);
+
+				}
+			}
+		}
+		return Serv_cli_Traff;
+
+	}
+
+	public int[] RandElements(int size) {
+		int[] arr = new int[size];
+
+		for (int i = 0; i < size; i++) {
+			arr[i] = (int) (Math.random() * 100) + 1;
+		}
+
+		return arr;
+	}
+}
